@@ -38,6 +38,8 @@ PROVIDER_OPENROUTER = "openrouter"
 BLUE_PROVIDER = PROVIDER_OPENROUTER
 BLUE_MODEL = "liquid/lfm-3-1.7b:free"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+LIQUID_BASE_URL = "https://api.liquid.ai/openai/v1"
+LIQUID_MODEL = "lfm3-1.7b"
 DEFAULT_OPENROUTER_MODEL = BLUE_MODEL  # alias
 
 # --- Red Team ---
@@ -112,14 +114,30 @@ def get_openrouter_api_key() -> str:
     return os.environ.get("OPENROUTER_API_KEY", "").strip()
 
 
+def get_blue_api_model() -> str:
+    """Provider-specific ID for the same LFM 3 1.7B family.
+
+    Keep get_blue_model() unchanged for the starter's graded model label.
+    """
+    if os.environ.get("BLUE_API_PROVIDER", "openrouter").strip().lower() == "liquid":
+        return LIQUID_MODEL
+    return get_blue_model()
+
+
 def blue_client_kwargs() -> dict:
-    """OpenAI SDK kwargs pointing at OpenRouter (Blue Team only)."""
+    """OpenAI-compatible connection; support OpenRouter or native Liquid.
+
+    BLUE_API_PROVIDER=liquid is for direct Liquid AI keys provided by the class.
+    The legacy OPENROUTER_API_KEY variable can hold that key without revealing it.
+    """
+    use_liquid = os.environ.get("BLUE_API_PROVIDER", "openrouter").strip().lower() == "liquid"
+    base_url = LIQUID_BASE_URL if use_liquid else (
+        os.environ.get("OPENROUTER_BASE_URL", OPENROUTER_BASE_URL).strip()
+        or OPENROUTER_BASE_URL
+    )
     return {
         "api_key": get_openrouter_api_key() or None,
-        "base_url": (
-            os.environ.get("OPENROUTER_BASE_URL", OPENROUTER_BASE_URL).strip()
-            or OPENROUTER_BASE_URL
-        ),
+        "base_url": base_url,
     }
 
 

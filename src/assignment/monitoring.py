@@ -42,16 +42,37 @@ class MonitoringAlert:
     judge_fails: int = 0
 
     def check_metrics(self) -> list[Alert]:
-        """TODO: compute rates, append Alert objects when thresholds exceeded."""
-        raise NotImplementedError("Implement MonitoringAlert.check_metrics")
+        """Recalculate alerts from counters, avoiding duplicate alert records."""
+        metrics = self.snapshot()
+        active = []
+        conditions = (
+            ("block_rate", metrics["block_rate"], self.block_rate_threshold),
+            ("rate_limit_hits", self.rate_limit_hits, self.rate_limit_hit_threshold),
+            ("judge_fail_rate", metrics["judge_fail_rate"], self.judge_fail_rate_threshold),
+        )
+        for name, value, threshold in conditions:
+            if name == "block_rate" and not self.total_requests:
+                continue
+            if name == "judge_fail_rate" and not self.judge_checks:
+                continue
+            if value > threshold:
+                active.append(Alert(
+                    metric=name, value=float(value), threshold=float(threshold),
+                    message=f"{name} exceeded threshold ({value:.3f} > {threshold:.3f})",
+                ))
+        self.alerts = active
+        return active
 
     def export_json(self, filepath: str | None = None):
-        """TODO: write metrics + alerts to JSON under repo-root ``outputs/`` by default.
-        Use ``filepath or default_metrics_path()`` so running from ``src/`` does not
-        create ``src/outputs/``.
-        """
-        _ = filepath or default_metrics_path()
-        raise NotImplementedError("Implement MonitoringAlert.export_json")
+        """Persist metrics and alert objects as valid JSON."""
+        self.check_metrics()
+        path = Path(filepath or default_metrics_path())
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(self.snapshot(), indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        return str(path)
 
     def snapshot(self) -> dict:
         block_rate = (

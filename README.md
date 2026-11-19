@@ -1,5 +1,31 @@
 # Day 11 — Controlled Agent Security (2026)
 
+## Thông tin bài nộp cá nhân (K5-L3A)
+
+- **Học viên:** Nguyen Van Minh
+- **MSSV:** 2A202603551
+- **Repo nộp:** `K5-L3A-DAY11-NguyenVanMinh-2A202603551-Guardrails-HITL-Responsible-AI`
+- **Python thử nghiệm:** 3.12.10
+- **Blue:** Liquid AI native OpenAI-compatible API (`BLUE_API_PROVIDER=liquid`, actual model `lfm3-1.7b`). Mã Blue trên OpenRouter tương ứng: `liquid/lfm-3-1.7b:free`. Để dùng OpenRouter, bỏ `BLUE_API_PROVIDER=liquid` và dùng OpenRouter key.
+- **Red / Red Advance:** Google Gemini `gemini-3.5-flash-lite` (model thực tế khi chạy CP4). Tên này khác `gemini-3.5-flash` ghi trong rubric starter; cần đối chiếu với Key Coach khi chấm/replay.
+
+### Cách chạy lại trên Windows
+
+Tạo `.venv`, cài `requirements.txt`, sao chép `.env.example` thành `.env` rồi đặt key và provider tương ứng. **Không commit `.env`**.
+
+```powershell
+.\.venv\Scripts\python.exe src/main.py --part 2
+.\.venv\Scripts\python.exe src/main.py --part 3
+.\.venv\Scripts\python.exe scripts\run_cp4_rate_limited.py --red-delay 60 --advance-delay 45
+.\.venv\Scripts\python.exe -m pytest tests\smoke tests\public -q
+.\.venv\Scripts\python.exe scripts\grade.py --submission-dir . --out outputs\grade_report.json
+```
+
+CP4 chạy bằng `run_cp4_rate_limited.py` để lưu kết quả sau từng prompt và ngừng khi gặp lỗi quota 429; script sử dụng cùng factories Red / Red Advance và `save_attack_results` như `src/main.py --part 4`. Những câu bị regex Red Advance chặn không gọi Gemini. Báo cáo tự sinh tại `outputs/lab_report.md`, không chỉnh sửa thủ công.
+
+---
+
+
 > 👤 **Hình thức:** bài tập **cá nhân** (1 người / 1 MSSV).  
 > 🎯 **Mục tiêu:** đóng vai **Blue Team** để học cách xây Guardrails phòng thủ, rồi đóng vai **Red Team** để tấn công agent **Red** hoặc **Red Advance**.  
 > ✅ Làm theo **Checkpoint 1 → 5** trong [`CHECKPOINTS.md`](CHECKPOINTS.md) · nộp theo [`SUBMISSION.md`](SUBMISSION.md).
